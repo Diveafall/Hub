@@ -643,7 +643,6 @@ class Tensor:
             raise ValueError(
                 f"Not all credentials are populated for a tensor with linked data. Missing: {missing_keys}. Populate with `dataset.populate_creds(key, value)`."
             )
-
     def get_full_point_cloud_numpy(
         self, aslist=False, fetch_chunks=False
     ) -> Union[np.ndarray, List[np.ndarray]]:
@@ -675,9 +674,9 @@ class Tensor:
         """
         self.check_link_ready()
         if self.htype == "point_cloud":
-            return self.get_full_point_cloud_numpy(aslist=False, fetch_chunks=False)[
-                ..., :3
-            ]
+            return self.get_full_point_cloud_numpy(
+                aslist=aslist, fetch_chunks=fetch_chunks
+            )[..., :3]
         return self.chunk_engine.numpy(
             self.index, aslist=aslist, fetch_chunks=fetch_chunks
         )
@@ -762,10 +761,17 @@ class Tensor:
                 return list(map(list, self.numpy(aslist=True)))
         elif htype == "point_cloud":
             full_arr = self.get_full_point_cloud_numpy(aslist=aslist)
-            meta = {
-                self.sample_info[0]["dimension_names"][i]: full_arr[0][..., i]
-                for i in range(len(self.sample_info[0]["dimension_names"]))
-            }
+            if self.ndim == 2:
+                meta = {}
+                for i in range(len(self.sample_info["dimension_names"])):
+                    meta[self.sample_info["dimension_names"][i]] = full_arr[..., i]
+                return meta
+            meta = []
+            for i in range(len(full_arr)):
+                meta_dict = {}
+                for j in range(len(self.sample_info[i]["dimension_names"])):
+                    meta_dict[self.sample_info[0]["dimension_names"][j]] = full_arr[i][..., j]
+                meta.append(meta_dict)
             return meta
         else:
             return self.numpy(aslist=aslist)

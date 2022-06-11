@@ -23,6 +23,8 @@ import numpy as np
 from pathlib import Path
 from PIL import Image, UnidentifiedImageError  # type: ignore
 from io import BytesIO
+import os
+
 import mmap
 import struct
 import sys
@@ -91,6 +93,9 @@ _JPEG_SKIP_MARKERS = set(_JPEG_SOFS[14:])
 _JPEG_SOFS_RE = re.compile(b"|".join(_JPEG_SOFS))
 _STRUCT_HHB = struct.Struct(">HHB")
 _STRUCT_II = struct.Struct(">ii")
+
+_LIDAR_COMPRESSIONS = [".las", ".laz"]
+_LIDAR_SIGNATURE = b"LASF"
 
 
 def to_image(array: np.ndarray) -> Image:
@@ -438,8 +443,8 @@ def verify_compressed_file(
                 return _read_video_shape(file), "|u1"  # type: ignore
         elif compression == "dcm":
             return _read_dicom_shape_and_dtype(file)
-        elif compression in ("las", "laz"):
-            return _read_point_cloud_shape(file), "<f4"
+        elif compression in ("las", "laz", "bin`"):
+            return _read_point_cloud_shape(file), ">f4"
         else:
             return _fast_decompress(file)
     except Exception as e:
@@ -464,6 +469,7 @@ def get_compression(header=None, path=None):
             ".dcm",
             ".las",
             ".laz",
+            ".bin",
         ]
         path = str(path).lower()
         for fmt in file_formats:
@@ -649,7 +655,7 @@ def read_meta_from_compressed_file(
                 shape, typestr = _read_video_shape(file), "|u1"  # type: ignore
             except Exception as e:
                 raise CorruptedSampleError(compression)
-        elif compression in ("las", "laz"):
+        elif compression in ("las", "laz", "bin"):
             try:
                 shape, typestr = _read_point_cloud_shape(file), "<f4"
             except Exception as e:
@@ -1029,49 +1035,83 @@ def _decompress_audio(
     return audio
 
 
-def _open_point_cloud_data(file: Union[bytes, memoryview, str]):
+def _open_kitti_bin_file(file):
+    file_buffer = file
+    if type(file) is str:
+        with open(file, "rb") as f:
+            file_buffer = f.read()
+    return np.frombuffer(file_buffer, dtype=np.float32).reshape(-1, 4)
+
+
+def _open_lidar_file(file):
     try:
         import laspy as lp  # type: ignore
     except:
         raise ModuleNotFoundError("laspy not found. Install using `pip install laspy`")
+    return lp.read(file)
 
+
+def _load_lidar_point_cloud_data(file):
+    point_cloud = _open_lidar_file(file)
+    dimension_names = list(point_cloud.point_format.dimension_names)
+    return point_cloud, dimension_names
+
+
+def _load_kitti_point_cloud_data(file):
+    point_cloud = _open_kitti_bin_file(file)
+    dimension_names = ["x", "y", "z", "intensity"]
+    return point_cloud, dimension_names
+
+
+def _open_point_cloud_data(file: Union[bytes, memoryview, str]):
     if isinstance(file, str):
-        point_cloud = lp.read(file)
-    else:
-        point_cloud = lp.read(BytesIO(file))
-    return point_cloud
+        extension = os.path.splitext(file)[1]
+        if extension in _LIDAR_COMPRESSIONS:
+            point_cloud, dimension_names = _load_lidar_point_cloud_data(file)
+            return point_cloud, dimension_names
+        return _load_kitti_point_cloud_data(file)
+
+    file_bytes = file
+    if isinstance(file, memoryview):
+        file_bytes = file.obj
+    if _LIDAR_SIGNATURE in file_bytes:
+        point_cloud, dimension_names = _load_lidar_point_cloud_data(BytesIO(file))
+        return point_cloud, dimension_names
+    return _load_kitti_point_cloud_data(file)
 
 
 def _read_point_cloud_meta(file):
-    point_cloud = _open_point_cloud_data(file)
-    keys = list(point_cloud.point_format.dimension_names)
+    point_cloud, dimension_names = _open_point_cloud_data(file)
     meta_data = {
-        "dimension_names": keys,
-        "las_header": {
-            "DEFAULT_VERSION": convert_version_to_dict(
-                point_cloud.header.DEFAULT_VERSION
-            ),
-            "file_source_id": point_cloud.header.file_source_id,
-            "system_identifier": point_cloud.header.system_identifier,
-            "generating_software": point_cloud.header.generating_software,
-            "creation_date": convert_creation_date_to_dict(
-                point_cloud.header.creation_date
-            ),
-            "point_count": point_cloud.header.point_count,  # think about ways to add it to meta
-            "scales": point_cloud.header.scales,
-            "offsets": point_cloud.header.offsets,
-            "number_of_points_by_return": point_cloud.header.number_of_points_by_return,
-            "start_of_waveform_data_packet_record": point_cloud.header.start_of_waveform_data_packet_record,
-            "start_of_first_evlr": point_cloud.header.start_of_first_evlr,
-            "number_of_evlrs": point_cloud.header.number_of_evlrs,
-            "version": convert_version_to_dict(point_cloud.header.version),
-            "maxs": point_cloud.header.maxs,
-            "mins": point_cloud.header.mins,
-            "major_version": point_cloud.header.major_version,
-            "minor_version": point_cloud.header.minor_version,
-        },  # TO DO: add support for DEFAULT_POINT_FORMAT, uuid, extra_header_bytes, extra_vlr_bytes,
-        # point_format, global_encoding, vlrs
+        "dimension_names": dimension_names,
     }
+    if type(point_cloud) != np.ndarray:
+        meta_data.update({
+            "las_header": {
+                "DEFAULT_VERSION": convert_version_to_dict(
+                    point_cloud.header.DEFAULT_VERSION
+                ),
+                "file_source_id": point_cloud.header.file_source_id,
+                "system_identifier": point_cloud.header.system_identifier,
+                "generating_software": point_cloud.header.generating_software,
+                "creation_date": convert_creation_date_to_dict(
+                    point_cloud.header.creation_date
+                ),
+                "point_count": point_cloud.header.point_count,  # think about ways to add it to meta
+                "scales": point_cloud.header.scales,
+                "offsets": point_cloud.header.offsets,
+                "number_of_points_by_return": point_cloud.header.number_of_points_by_return,
+                "start_of_waveform_data_packet_record": point_cloud.header.start_of_waveform_data_packet_record,
+                "start_of_first_evlr": point_cloud.header.start_of_first_evlr,
+                "number_of_evlrs": point_cloud.header.number_of_evlrs,
+                "version": convert_version_to_dict(point_cloud.header.version),
+                "maxs": point_cloud.header.maxs,
+                "mins": point_cloud.header.mins,
+                "major_version": point_cloud.header.major_version,
+                "minor_version": point_cloud.header.minor_version,
+            },  # TO DO: add support for DEFAULT_POINT_FORMAT, uuid, extra_header_bytes, extra_vlr_bytes,
+            # point_format, global_encoding, vlrs
+        })
     return meta_data
 
 
@@ -1082,9 +1122,10 @@ def _read_point_cloud_shape(file):
 
 
 def _decompress_point_cloud(file: Union[bytes, memoryview, str]):
-    point_cloud = _open_point_cloud_data(file)
-    point_cloud_dimension_names = _read_point_cloud_meta(file)["dimension_names"]
-    decompressed_point_cloud = np.vstack(
-        [point_cloud[dimension_name] for dimension_name in point_cloud_dimension_names]
-    ).transpose().astype(np.dtype("float32"))
+    decompressed_point_cloud, _ = _open_point_cloud_data(file)
+    if type(decompressed_point_cloud) is not np.ndarray:
+        meta = _read_point_cloud_meta(file)
+        decompressed_point_cloud = np.vstack(
+            [decompressed_point_cloud[dimension_name] for dimension_name in meta["dimension_names"]]
+        ).transpose().astype(np.dtype("float32"))
     return decompressed_point_cloud
