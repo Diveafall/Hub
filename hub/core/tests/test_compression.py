@@ -162,16 +162,16 @@ def test_video(compression, video_paths):
             assert sample.compressed_bytes(compression) == f.read()
 
 
-@pytest.mark.skipif(
-    os.name == "nt" and sys.version_info < (3, 7), reason="requires python 3.7 or above"
-)
 @pytest.mark.parametrize("compression", POINT_CLOUD_COMPRESSIONS)
 def test_point_cloud(compression, point_cloud_paths):
     path = point_cloud_paths[compression]
     sample = hub.read(path)
     arr = np.array(sample)
-    assert arr.shape[-1] == 18
-    assert arr.dtype == "int32"
+    if compression in ["las", "laz"]:
+        assert arr.shape[-1] == 18
+        assert arr.dtype == "int32"
+    else:
+        assert arr.shape[-1] == 4
 
 
 def test_apng(memory_ds):

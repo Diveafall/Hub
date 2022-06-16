@@ -445,8 +445,8 @@ def video_paths():
 @pytest.fixture
 def point_cloud_paths():
     paths = {
-        "las": "point_cloud.las",
-        "laz": "point_cloud.laz",
+        # "las": "point_cloud.las",
+        # "laz": "point_cloud.laz",
         "bin": "point_cloud.bin",
     }
 

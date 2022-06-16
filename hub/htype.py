@@ -70,6 +70,7 @@ HTYPE_CONFIGURATIONS: Dict[str, Dict] = {
         "_info": ["class_names"],  # class_names should be stored in info, not meta
     },
     "bbox": {"dtype": "float32", "coords": {}, "_info": ["coords"]},
+    "bbox_3d": {"dtype": "float32", "coords": {}, "_info": ["coords"]},
     "audio": {"dtype": "float64"},
     "video": {"dtype": "uint8"},
     "binary_mask": {
@@ -85,7 +86,7 @@ HTYPE_CONFIGURATIONS: Dict[str, Dict] = {
     "text": {"dtype": "str"},
     "dicom": {"sample_compression": "dcm"},
     "point_cloud": {"dtype": "float32"},
-    "point_cloud_calibration_matrix": {"dtype": "float32"},
+    "point_cloud.calibration_matrix": {"dtype": "float32"},
 }
 
 HTYPE_VERIFICATIONS: Dict[str, Dict] = {

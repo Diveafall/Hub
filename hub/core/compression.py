@@ -1086,32 +1086,34 @@ def _read_point_cloud_meta(file):
         "dimension_names": dimension_names,
     }
     if type(point_cloud) != np.ndarray:
-        meta_data.update({
-            "las_header": {
-                "DEFAULT_VERSION": convert_version_to_dict(
-                    point_cloud.header.DEFAULT_VERSION
-                ),
-                "file_source_id": point_cloud.header.file_source_id,
-                "system_identifier": point_cloud.header.system_identifier,
-                "generating_software": point_cloud.header.generating_software,
-                "creation_date": convert_creation_date_to_dict(
-                    point_cloud.header.creation_date
-                ),
-                "point_count": point_cloud.header.point_count,  # think about ways to add it to meta
-                "scales": point_cloud.header.scales,
-                "offsets": point_cloud.header.offsets,
-                "number_of_points_by_return": point_cloud.header.number_of_points_by_return,
-                "start_of_waveform_data_packet_record": point_cloud.header.start_of_waveform_data_packet_record,
-                "start_of_first_evlr": point_cloud.header.start_of_first_evlr,
-                "number_of_evlrs": point_cloud.header.number_of_evlrs,
-                "version": convert_version_to_dict(point_cloud.header.version),
-                "maxs": point_cloud.header.maxs,
-                "mins": point_cloud.header.mins,
-                "major_version": point_cloud.header.major_version,
-                "minor_version": point_cloud.header.minor_version,
-            },  # TO DO: add support for DEFAULT_POINT_FORMAT, uuid, extra_header_bytes, extra_vlr_bytes,
-            # point_format, global_encoding, vlrs
-        })
+        meta_data.update(
+            {
+                "las_header": {
+                    "DEFAULT_VERSION": convert_version_to_dict(
+                        point_cloud.header.DEFAULT_VERSION
+                    ),
+                    "file_source_id": point_cloud.header.file_source_id,
+                    "system_identifier": point_cloud.header.system_identifier,
+                    "generating_software": point_cloud.header.generating_software,
+                    "creation_date": convert_creation_date_to_dict(
+                        point_cloud.header.creation_date
+                    ),
+                    "point_count": point_cloud.header.point_count,  # think about ways to add it to meta
+                    "scales": point_cloud.header.scales.tolist(),
+                    "offsets": point_cloud.header.offsets.tolist(),
+                    "number_of_points_by_return": point_cloud.header.number_of_points_by_return.tolist(),
+                    "start_of_waveform_data_packet_record": point_cloud.header.start_of_waveform_data_packet_record,
+                    "start_of_first_evlr": point_cloud.header.start_of_first_evlr,
+                    "number_of_evlrs": point_cloud.header.number_of_evlrs,
+                    "version": convert_version_to_dict(point_cloud.header.version),
+                    "maxs": point_cloud.header.maxs.tolist(),
+                    "mins": point_cloud.header.mins.tolist(),
+                    "major_version": point_cloud.header.major_version,
+                    "minor_version": point_cloud.header.minor_version,
+                },  # TO DO: add support for DEFAULT_POINT_FORMAT, uuid, extra_header_bytes, extra_vlr_bytes,
+                # point_format, global_encoding, vlrs
+            }
+        )
     return meta_data
 
 
@@ -1125,7 +1127,14 @@ def _decompress_point_cloud(file: Union[bytes, memoryview, str]):
     decompressed_point_cloud, _ = _open_point_cloud_data(file)
     if type(decompressed_point_cloud) is not np.ndarray:
         meta = _read_point_cloud_meta(file)
-        decompressed_point_cloud = np.vstack(
-            [decompressed_point_cloud[dimension_name] for dimension_name in meta["dimension_names"]]
-        ).transpose().astype(np.dtype("float32"))
+        decompressed_point_cloud = (
+            np.vstack(
+                [
+                    decompressed_point_cloud[dimension_name]
+                    for dimension_name in meta["dimension_names"]
+                ]
+            )
+            .transpose()
+            .astype(np.dtype("float32"))
+        )
     return decompressed_point_cloud

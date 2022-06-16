@@ -643,6 +643,7 @@ class Tensor:
             raise ValueError(
                 f"Not all credentials are populated for a tensor with linked data. Missing: {missing_keys}. Populate with `dataset.populate_creds(key, value)`."
             )
+
     def get_full_point_cloud_numpy(
         self, aslist=False, fetch_chunks=False
     ) -> Union[np.ndarray, List[np.ndarray]]:
@@ -770,7 +771,9 @@ class Tensor:
             for i in range(len(full_arr)):
                 meta_dict = {}
                 for j in range(len(self.sample_info[i]["dimension_names"])):
-                    meta_dict[self.sample_info[0]["dimension_names"][j]] = full_arr[i][..., j]
+                    meta_dict[self.sample_info[0]["dimension_names"][j]] = full_arr[i][
+                        ..., j
+                    ]
                 meta.append(meta_dict)
             return meta
         else:
