@@ -54,6 +54,7 @@ from hub.util.version_control import auto_checkout
 
 from hub.compression import get_compression_type, VIDEO_COMPRESSION
 from hub.util.notebook import is_jupyter, video_html, is_colab
+from hub.util.point_cloud import POINT_CLOUD_FIELD_NAME_TO_DTYPE
 import warnings
 import webbrowser
 
@@ -647,6 +648,24 @@ class Tensor:
     def get_full_point_cloud_numpy(
         self, aslist=False, fetch_chunks=False
     ) -> Union[np.ndarray, List[np.ndarray]]:
+        """Computes the contents of the tensor in numpy format.
+
+        Args:
+            aslist (bool): If True, a list of np.ndarrays will be returned. Helpful for dynamic tensors.
+                If False, a single np.ndarray will be returned unless the samples are dynamically shaped, in which case
+                an error is raised.
+            fetch_chunks (bool): If True, full chunks will be retrieved from the storage, otherwise only required bytes will be retrieved.
+                This will always be True even if specified as False in the following cases:
+                - The tensor is ChunkCompressed
+                - The chunk which is being accessed has more than 128 samples.
+
+        Raises:
+            DynamicTensorNumpyError: If reading a dynamically-shaped array slice without `aslist=True`.
+            ValueError: If the tensor is a link and the credentials are not populated.
+
+        Returns:
+            A numpy array containing the data represented by this tensor.
+        """
         self.check_link_ready()
         return self.chunk_engine.numpy(
             self.index, aslist=aslist, fetch_chunks=fetch_chunks
@@ -675,9 +694,25 @@ class Tensor:
         """
         self.check_link_ready()
         if self.htype == "point_cloud":
-            return self.get_full_point_cloud_numpy(
+            full_numpy_arr = self.get_full_point_cloud_numpy(
                 aslist=aslist, fetch_chunks=fetch_chunks
-            )[..., :3]
+            )
+            if len(full_numpy_arr.dtype) > 1:
+                return np.concatenate(
+                    [
+                        np.expand_dims(
+                            full_numpy_arr[POINT_CLOUD_FIELD_NAME_TO_DTYPE["X"]], -1
+                        ),
+                        np.expand_dims(
+                            full_numpy_arr[POINT_CLOUD_FIELD_NAME_TO_DTYPE["Y"]], -1
+                        ),
+                        np.expand_dims(
+                            full_numpy_arr[POINT_CLOUD_FIELD_NAME_TO_DTYPE["Z"]], -1
+                        ),
+                    ],
+                    axis=-1,
+                )
+            return full_numpy_arr[..., :3]
         return self.chunk_engine.numpy(
             self.index, aslist=aslist, fetch_chunks=fetch_chunks
         )
@@ -762,18 +797,33 @@ class Tensor:
                 return list(map(list, self.numpy(aslist=True)))
         elif htype == "point_cloud":
             full_arr = self.get_full_point_cloud_numpy(aslist=aslist)
-            if self.ndim == 2:
+            # we support two extensions, for las the numpy array contains different dtypes
+            # while numpy array of bin is np.float32. Also for bin we have to check whether we are working
+            # with one sample or several samples
+            if (self.ndim == 2 and len(full_arr.dtype) == 0) or (
+                self.ndim == 1 and isinstance(self.sample_info, dict)
+            ):
                 meta = {}
-                for i in range(len(self.sample_info["dimension_names"])):
-                    meta[self.sample_info["dimension_names"][i]] = full_arr[..., i]
+                for i, dimension_name in enumerate(self.sample_info["dimension_names"]):
+                    if len(full_arr.dtype) > 1:
+                        dtype = POINT_CLOUD_FIELD_NAME_TO_DTYPE[dimension_name]
+                        meta[dimension_name] = full_arr[dtype]
+                    else:
+                        meta[dimension_name] = full_arr[..., i]
                 return meta
+
             meta = []
             for i in range(len(full_arr)):
                 meta_dict = {}
-                for j in range(len(self.sample_info[i]["dimension_names"])):
-                    meta_dict[self.sample_info[0]["dimension_names"][j]] = full_arr[i][
-                        ..., j
-                    ]
+                for j, dimension_name in enumerate(
+                    self.sample_info[i]["dimension_names"]
+                ):
+                    # check whether array have several dtypes
+                    if len(full_arr.dtype) > 1:
+                        dtype = POINT_CLOUD_FIELD_NAME_TO_DTYPE[dimension_name]
+                        meta_dict[dimension_name] = full_arr[dtype][i]
+                    else:
+                        meta_dict[dimension_name] = full_arr[i][..., j]
                 meta.append(meta_dict)
             return meta
         else:

@@ -6,41 +6,21 @@ import numpy as np
 
 def test_point_cloud(local_ds, point_cloud_paths):
     for i, (compression, path) in enumerate(point_cloud_paths.items()):
-        if compression in ["las", "laz"]:
+        if compression == "las":
             tensor = local_ds.create_tensor(
                 f"point_cloud_{i}", htype="point_cloud", sample_compression=compression
             )
             sample = hub.read(path)
             if "dummy_data" in path:  # check shape only for internal test point_clouds
-                assert sample.shape == (20153, 18)
+                assert sample.shape[0] == 20153
 
-            assert sample.shape[-1] == 18
-            assert len(sample.meta["las_header"]) == 17
-            assert type(sample.meta["dimension_names"]) == dict
-            assert type(sample.meta["las_header"]) == dict
-            assert type(sample.meta["las_header"]["DEFAULT_VERSION"]) == dict
-            assert type(sample.meta["las_header"]["file_source_id"]) == int
-            assert type(sample.meta["las_header"]["system_identifier"]) == str
-            assert type(sample.meta["las_header"]["generating_software"]) == str
-            assert type(sample.meta["las_header"]["creation_date"]) == dict
-            assert type(sample.meta["las_header"]["point_count"]) == int
-            assert type(sample.meta["las_header"]["scales"]) == np.ndarray
-            assert type(sample.meta["las_header"]["offsets"]) == np.ndarray
-            assert (
-                type(sample.meta["las_header"]["number_of_points_by_return"])
-                == np.ndarray
-            )
-            assert (
-                type(sample.meta["las_header"]["start_of_waveform_data_packet_record"])
-                == int
-            )
-            assert type(sample.meta["las_header"]["start_of_first_evlr"]) == int
-            assert type(sample.meta["las_header"]["number_of_evlrs"]) == int
-            assert type(sample.meta["las_header"]["version"]) == dict
-            assert type(sample.meta["las_header"]["maxs"]) == np.ndarray
-            assert type(sample.meta["las_header"]["mins"]) == np.ndarray
-            assert type(sample.meta["las_header"]["major_version"]) == int
-            assert type(sample.meta["las_header"]["minor_version"]) == int
+            assert len(sample.meta) == 6
+            assert len(sample.meta["dimension_names"]) == 18
+            assert len(sample.meta["las_header"]) == 23
+            tensor.append(sample)
+            tensor.append(sample)
+            tensor.append(sample)
+            assert tensor.shape == (3, 20153)
 
             shape_tester(local_ds, path, sample, tensor, feature_size=18)
         elif compression == "bin":
@@ -66,7 +46,7 @@ def shape_tester(local_ds, path, sample, tensor, feature_size):
 
 def test_point_cloud_slicing(local_ds: Dataset, point_cloud_paths):
     for compression, path in point_cloud_paths.items():
-        if compression in ["las", "laz"]:
+        if compression == "las":
             dummy = np.zeros((20153, 3))
         elif compression == "bin":
             dummy = np.zeros((120268, 3))

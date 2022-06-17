@@ -964,7 +964,6 @@ def test_compressions_list():
         "jpeg",
         "jpeg2000",
         "las",
-        "laz",
         "lz4",
         "mkv",
         "mp3",

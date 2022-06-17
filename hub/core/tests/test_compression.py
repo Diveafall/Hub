@@ -163,15 +163,16 @@ def test_video(compression, video_paths):
 
 
 @pytest.mark.parametrize("compression", POINT_CLOUD_COMPRESSIONS)
-def test_point_cloud(compression, point_cloud_paths):
+def test_point_cloud(point_cloud_paths, compression):
     path = point_cloud_paths[compression]
     sample = hub.read(path)
     arr = np.array(sample)
-    if compression in ["las", "laz"]:
-        assert arr.shape[-1] == 18
-        assert arr.dtype == "int32"
+    if compression == "las":
+        assert len(arr[0]) == 18
+        assert len(arr.dtype) == 18
     else:
         assert arr.shape[-1] == 4
+        assert arr.dtype == "float32"
 
 
 def test_apng(memory_ds):
