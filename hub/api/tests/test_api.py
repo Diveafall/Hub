@@ -7,7 +7,7 @@ import hub
 from hub.core.dataset import Dataset
 from hub.core.tensor import Tensor
 
-from hub.tests.common import assert_array_lists_equal
+from hub.tests.common import assert_array_lists_equal, get_dummy_data_path
 from hub.tests.storage_fixtures import enabled_remote_storages
 from hub.tests.dataset_fixtures import enabled_persistent_dataset_generators
 from hub.core.storage import GCSProvider
@@ -570,10 +570,9 @@ def test_htype(memory_ds: Dataset):
     segment_mask.append(np.ones((28, 28), dtype=np.uint32))
     keypoints_coco.append(np.ones((51, 2), dtype=np.int32))
     point.append(np.ones((11, 2), dtype=np.int32))
+
     point_cloud.append(
-        hub.read(
-            "/Users/adilkhansarsen/Documents/work/projects/activeloop/Hub/hub/tests/dummy_data/point_cloud/point_cloud.las"
-        )
+        hub.read(os.path.join(get_dummy_data_path("point_cloud"), "point_cloud.las"))
     )
     memory_ds.point_cloud_calibration_matrix["P"].append(
         np.zeros((4, 4), dtype=np.float32)
