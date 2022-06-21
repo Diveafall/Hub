@@ -377,7 +377,6 @@ class SampleStreaming(Streaming):
                 for arr in chunk_id_encodings
             ]
         except Exception:
-            # print("At lease one of the tensors in the dataset is empty")
             raise EmptyTensorInTheDatasetError
 
         last_idx: int = 0
