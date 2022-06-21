@@ -20,6 +20,7 @@ from hub.core.tiling.deserialize import combine_chunks
 from hub.util.exceptions import (
     DatasetUnsupportedPytorch,
     SampleDecompressionError,
+    EmptyTensorInTheDatasetError,
 )
 from hub.util.keys import get_chunk_key
 from hub.util.remove_cache import get_base_storage
@@ -370,10 +371,14 @@ class SampleStreaming(Streaming):
             engine.chunk_id_encoder.array for engine in self.chunk_engines.values()
         ]
 
-        iterators = [
-            nditer([arr[:, LAST_SEEN_INDEX_COLUMN], arr[:, CHUNK_ID_COLUMN]])  # type: ignore
-            for arr in chunk_id_encodings
-        ]
+        try:
+            iterators = [
+                nditer([arr[:, LAST_SEEN_INDEX_COLUMN], arr[:, CHUNK_ID_COLUMN]])  # type: ignore
+                for arr in chunk_id_encodings
+            ]
+        except Exception:
+            # print("At lease one of the tensors in the dataset is empty")
+            raise EmptyTensorInTheDatasetError
 
         last_idx: int = 0
 

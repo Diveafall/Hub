@@ -726,3 +726,10 @@ class EmptyTensorError(Exception):
 
 class DatasetViewSavingError(Exception):
     pass
+
+
+class EmptyTensorInTheDatasetError(Exception):
+    def __init__(self):
+        super().__init__(
+            "At least one of the tensors in the dataset is empty"
+        )
