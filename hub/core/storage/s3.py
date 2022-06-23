@@ -16,6 +16,7 @@ from hub.util.exceptions import (
     S3SetError,
     S3Error,
     PathNotEmptyException,
+    IvalidTokenError,
 )
 from botocore.exceptions import (
     ReadTimeoutError,
@@ -472,7 +473,10 @@ class S3Provider(StorageProvider):
         This would only happen for datasets stored on Hub storage for which temporary 12 hour credentials are generated.
         """
         if self.expiration and (force or float(self.expiration) < time.time()):
-            client = HubBackendClient(self.token)
+            try:
+                client = HubBackendClient(self.token)
+            except Exception:
+                raise IvalidTokenError
             org_id, ds_name = self.tag.split("/")
 
             mode = "r" if self.read_only else "a"
@@ -556,7 +560,10 @@ class S3Provider(StorageProvider):
 
         if url is None:
             if self._is_hub_path:
-                client = HubBackendClient(self.token)
+                try:
+                    client = HubBackendClient(self.token)
+                except Exception:
+                    raise IvalidTokenError
                 org_id, ds_name = self.tag.split("/")  # type: ignore
                 url = client.get_presigned_url(org_id, ds_name, key)
             else:

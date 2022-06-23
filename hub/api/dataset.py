@@ -35,6 +35,9 @@ from hub.util.exceptions import (
     PathNotEmptyException,
     SamePathException,
     AuthorizationException,
+    HubLoadInvalidPermissionError,
+    HubEmptyInvalidPermissionError,
+    IvalidTokenError,
 )
 from hub.util.storage import get_storage_and_cache_chain, storage_provider_from_path
 from hub.util.compute import get_compute_provider
@@ -117,15 +120,17 @@ class dataset:
             creds = {}
 
         feature_report_path(path, "dataset", {"Overwrite": overwrite})
-
-        storage, cache_chain = get_storage_and_cache_chain(
-            path=path,
-            read_only=read_only,
-            creds=creds,
-            token=token,
-            memory_cache_size=memory_cache_size,
-            local_cache_size=local_cache_size,
-        )
+        try:
+            storage, cache_chain = get_storage_and_cache_chain(
+                path=path,
+                read_only=read_only,
+                creds=creds,
+                token=token,
+                memory_cache_size=memory_cache_size,
+                local_cache_size=local_cache_size,
+            )
+        except Exception:
+            raise DatasetHandlerError("This dataset doesn't exist or you do not have permission to create one at the specified location")
         ds_exists = dataset_exists(cache_chain)
         if overwrite and ds_exists:
             cache_chain.clear()
@@ -234,14 +239,17 @@ class dataset:
 
         feature_report_path(path, "empty", {"Overwrite": overwrite})
 
-        storage, cache_chain = get_storage_and_cache_chain(
-            path=path,
-            read_only=False,
-            creds=creds,
-            token=token,
-            memory_cache_size=memory_cache_size,
-            local_cache_size=local_cache_size,
-        )
+        try:
+            storage, cache_chain = get_storage_and_cache_chain(
+                path=path,
+                read_only=False,
+                creds=creds,
+                token=token,
+                memory_cache_size=memory_cache_size,
+                local_cache_size=local_cache_size,
+            )
+        except Exception:
+            raise HubEmptyInvalidPermissionError
 
         if overwrite and dataset_exists(cache_chain):
             cache_chain.clear()
@@ -311,14 +319,19 @@ class dataset:
 
         feature_report_path(path, "load", {})
 
-        storage, cache_chain = get_storage_and_cache_chain(
-            path=path,
-            read_only=read_only,
-            creds=creds,
-            token=token,
-            memory_cache_size=memory_cache_size,
-            local_cache_size=local_cache_size,
-        )
+        try:
+            storage, cache_chain = get_storage_and_cache_chain(
+                path=path,
+                read_only=read_only,
+                creds=creds,
+                token=token,
+                memory_cache_size=memory_cache_size,
+                local_cache_size=local_cache_size,
+            )
+        except Exception as e:
+            if isinstance(e, IvalidTokenError):
+                raise
+            raise HubLoadInvalidPermissionError
 
         if not dataset_exists(cache_chain):
             raise DatasetHandlerError(
