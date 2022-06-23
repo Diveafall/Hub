@@ -735,12 +735,16 @@ class EmptyTensorInTheDatasetError(Exception):
 
 class HubLoadInvalidPermissionError(Exception):
     def __init__(self):
-        super().__init__("This dataset doesn't exist or you do not have permission to access it")
+        super().__init__(
+            "This dataset doesn't exist or you do not have permission to access it"
+        )
 
 
 class HubEmptyInvalidPermissionError(Exception):
     def __init__(self):
-        super().__init__("You do not have permission to create a dataset at the specified location")
+        super().__init__(
+            "You do not have permission to create a dataset at the specified location"
+        )
 
 
 class IvalidTokenError(Exception):

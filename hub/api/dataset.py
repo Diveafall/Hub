@@ -130,7 +130,9 @@ class dataset:
                 local_cache_size=local_cache_size,
             )
         except Exception:
-            raise DatasetHandlerError("This dataset doesn't exist or you do not have permission to create one at the specified location")
+            raise DatasetHandlerError(
+                "This dataset doesn't exist or you do not have permission to create one at the specified location"
+            )
         ds_exists = dataset_exists(cache_chain)
         if overwrite and ds_exists:
             cache_chain.clear()
