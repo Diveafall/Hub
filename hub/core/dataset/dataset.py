@@ -76,6 +76,7 @@ from hub.util.exceptions import (
     EmptyCommitError,
     DatasetViewSavingError,
     DatasetHandlerError,
+    EmptyTensorInTheDatasetError,
 )
 from hub.util.keys import (
     dataset_exists,
@@ -1360,6 +1361,10 @@ class Dataset:
             A torch.utils.data.DataLoader object.
         """
         from hub.integrations import dataset_to_pytorch as to_pytorch
+
+        for tensor_name in self.tensors.keys():
+            if len(self.tensors[tensor_name]) == 0:
+                raise EmptyTensorInTheDatasetError
 
         dataloader = to_pytorch(
             self,

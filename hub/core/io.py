@@ -371,13 +371,10 @@ class SampleStreaming(Streaming):
             engine.chunk_id_encoder.array for engine in self.chunk_engines.values()
         ]
 
-        try:
-            iterators = [
-                nditer([arr[:, LAST_SEEN_INDEX_COLUMN], arr[:, CHUNK_ID_COLUMN]])  # type: ignore
-                for arr in chunk_id_encodings
-            ]
-        except Exception:
-            raise EmptyTensorInTheDatasetError
+        iterators = [
+            nditer([arr[:, LAST_SEEN_INDEX_COLUMN], arr[:, CHUNK_ID_COLUMN]])  # type: ignore
+            for arr in chunk_id_encodings
+        ]
 
         last_idx: int = 0
 
