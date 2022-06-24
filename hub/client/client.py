@@ -1,7 +1,11 @@
 import hub
 import requests
 from typing import Optional
-from hub.util.exceptions import LoginException, InvalidPasswordException, InvalidTokenException
+from hub.util.exceptions import (
+    LoginException,
+    InvalidPasswordException,
+    InvalidTokenException,
+)
 from hub.client.utils import check_response_status, write_token, read_token
 from hub.client.config import (
     HUB_REST_ENDPOINT,
