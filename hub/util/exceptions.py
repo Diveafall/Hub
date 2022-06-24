@@ -304,7 +304,7 @@ class UnexpectedStatusCodeException(Exception):
         super().__init__(message)
 
 
-class InvalidTokenException(Exception):
+class EmptyTokenException(Exception):
     def __init__(self, message="The authentication token is empty."):
         super().__init__(message)
 
@@ -747,6 +747,6 @@ class HubEmptyInvalidPermissionError(Exception):
         )
 
 
-class IvalidTokenError(Exception):
+class InvalidTokenException(Exception):
     def __init__(self):
         super().__init__("Invalid token")

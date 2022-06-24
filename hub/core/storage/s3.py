@@ -16,7 +16,6 @@ from hub.util.exceptions import (
     S3SetError,
     S3Error,
     PathNotEmptyException,
-    IvalidTokenError,
 )
 from botocore.exceptions import (
     ReadTimeoutError,

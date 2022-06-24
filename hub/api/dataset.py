@@ -37,7 +37,7 @@ from hub.util.exceptions import (
     AuthorizationException,
     HubLoadInvalidPermissionError,
     HubEmptyInvalidPermissionError,
-    IvalidTokenError,
+    InvalidTokenException,
 )
 from hub.util.storage import get_storage_and_cache_chain, storage_provider_from_path
 from hub.util.compute import get_compute_provider
@@ -331,7 +331,7 @@ class dataset:
                 local_cache_size=local_cache_size,
             )
         except Exception as e:
-            if isinstance(e, IvalidTokenError):
+            if isinstance(e, InvalidTokenException):
                 raise
             raise HubLoadInvalidPermissionError
 

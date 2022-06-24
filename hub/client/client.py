@@ -1,7 +1,7 @@
 import hub
 import requests
 from typing import Optional
-from hub.util.exceptions import LoginException, InvalidPasswordException
+from hub.util.exceptions import LoginException, InvalidPasswordException, InvalidTokenException
 from hub.client.utils import check_response_status, write_token, read_token
 from hub.client.config import (
     HUB_REST_ENDPOINT,
@@ -184,12 +184,15 @@ class HubBackendClient:
             tuple: containing full url to dataset, credentials, mode and expiration time respectively.
         """
         relative_url = GET_DATASET_CREDENTIALS_SUFFIX.format(org_id, ds_name)
-        response = self.request(
-            "GET",
-            relative_url,
-            endpoint=self.endpoint(),
-            params={"mode": mode, "no_cache": no_cache},
-        ).json()
+        try:
+            response = self.request(
+                "GET",
+                relative_url,
+                endpoint=self.endpoint(),
+                params={"mode": mode, "no_cache": no_cache},
+            ).json()
+        except Exception:
+            raise InvalidTokenException
         full_url = response.get("path")
         creds = response["creds"]
         mode = response["mode"]
