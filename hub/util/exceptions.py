@@ -195,6 +195,11 @@ class LoginException(Exception):
         super().__init__(message)
 
 
+class UserNotLoggedInException(Exception):
+    def __init__(self, message=""):
+        super().__init__(message)
+
+
 class InvalidHubPathException(Exception):
     def __init__(self, path):
         super().__init__(
@@ -750,3 +755,9 @@ class HubEmptyInvalidPermissionError(Exception):
 class InvalidTokenException(Exception):
     def __init__(self):
         super().__init__("Invalid token")
+
+
+class TokenError(Exception):
+    def __init__(self):
+        message = "Token does not have sufficient permissions or some other problems with token"
+        super().__init__(message)

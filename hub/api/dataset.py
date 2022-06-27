@@ -38,6 +38,8 @@ from hub.util.exceptions import (
     HubLoadInvalidPermissionError,
     HubEmptyInvalidPermissionError,
     InvalidTokenException,
+    UserNotLoggedInException,
+    TokenError,
 )
 from hub.util.storage import get_storage_and_cache_chain, storage_provider_from_path
 from hub.util.compute import get_compute_provider
@@ -129,10 +131,14 @@ class dataset:
                 memory_cache_size=memory_cache_size,
                 local_cache_size=local_cache_size,
             )
-        except Exception:
-            raise DatasetHandlerError(
-                "This dataset doesn't exist or you do not have permission to create one at the specified location"
-            )
+        except Exception as e:
+            if isinstance(e, UserNotLoggedInException):
+                message = f"Please log in through the CLI in order to create this dataset, " \
+                           "or create an API token in the UI and pass it to this method using " \
+                           "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and " \
+                           "‘activeloop register."
+                raise UserNotLoggedInException(message)
+            raise
         ds_exists = dataset_exists(cache_chain)
         if overwrite and ds_exists:
             cache_chain.clear()
@@ -250,8 +256,14 @@ class dataset:
                 memory_cache_size=memory_cache_size,
                 local_cache_size=local_cache_size,
             )
-        except Exception:
-            raise HubEmptyInvalidPermissionError
+        except Exception as e:
+            if isinstance(e, UserNotLoggedInException):
+                message = f"Please log in through the CLI in order to create this dataset, " \
+                          "or create an API token in the UI and pass it to this method using " \
+                          "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and " \
+                          "‘activeloop register."
+                raise UserNotLoggedInException(message)
+            raise
 
         if overwrite and dataset_exists(cache_chain):
             cache_chain.clear()
@@ -331,10 +343,13 @@ class dataset:
                 local_cache_size=local_cache_size,
             )
         except Exception as e:
-            if isinstance(e, InvalidTokenException):
-                raise
-            raise HubLoadInvalidPermissionError
-
+            if isinstance(e, UserNotLoggedInException):
+                message = f"Please log in through the CLI in order to load this dataset, " \
+                          "or create an API token in the UI and pass it to this method using " \
+                          "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and " \
+                          "‘activeloop register."
+                raise UserNotLoggedInException(message)
+            raise
         if not dataset_exists(cache_chain):
             raise DatasetHandlerError(
                 f"A Hub dataset does not exist at the given path ({path}). Check the path provided or in case you want to create a new dataset, use hub.empty()."

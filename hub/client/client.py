@@ -5,6 +5,8 @@ from hub.util.exceptions import (
     LoginException,
     InvalidPasswordException,
     InvalidTokenException,
+    UserNotLoggedInException,
+    TokenError,
 )
 from hub.client.utils import check_response_status, write_token, read_token
 from hub.client.config import (
@@ -25,6 +27,7 @@ from hub.client.config import (
     GET_PRESIGNED_URL_SUFFIX,
 )
 from hub.client.log import logger
+import jwt # should add it to requirements.txt
 
 # for these codes, we will retry requests upto 3 times
 retry_status_codes = {502}
@@ -144,7 +147,9 @@ class HubBackendClient:
             string: The auth token corresponding to the accound.
 
         Raises:
+            UserNotLoggedInException: if user is not authorised
             LoginException: If there is an issue retrieving the auth token.
+
         """
         json = {"username": username, "password": password}
         response = self.request("POST", GET_TOKEN_SUFFIX, json=json)
@@ -172,6 +177,7 @@ class HubBackendClient:
         self,
         org_id: str,
         ds_name: str,
+        hub_method: str,
         mode: Optional[str] = None,
         no_cache: bool = False,
     ):
@@ -180,6 +186,7 @@ class HubBackendClient:
         Args:
             org_id (str): The name of the user/organization to which the dataset belongs.
             ds_name (str): The name of the dataset being accessed.
+            hub_method (str): Whether this method is used to load or create a dataset
             mode (str, optional): The mode in which the user has requested to open the dataset.
                 If not provided, the backend will set mode to 'a' if user has write permission, else 'r'.
             no_cache (bool): If True, cached creds are ignored and new creds are returned. Default False.
@@ -196,7 +203,13 @@ class HubBackendClient:
                 params={"mode": mode, "no_cache": no_cache},
             ).json()
         except Exception:
-            raise InvalidTokenException
+            try:
+                decoded_token = jwt.decode(self.token, options={"verify_signature": False})
+            except Exception:
+                raise InvalidTokenException
+            if decoded_token["id"] == "public":
+                raise UserNotLoggedInException()
+            raise TokenError
         full_url = response.get("path")
         creds = response["creds"]
         mode = response["mode"]
