@@ -460,3 +460,8 @@ def hub_token(request):
     if is_opt_true(request, HUB_CLOUD_OPT):
         return request.getfixturevalue(request.param)
     return None
+
+@pytest.fixture
+def hub_invalid_token():
+    return "sdfaerfqr"
+
