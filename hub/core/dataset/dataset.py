@@ -1371,6 +1371,9 @@ class Dataset:
 
         Returns:
             A torch.utils.data.DataLoader object.
+
+        Raises:
+            EmptyTensorInTheDatasetError - when one of the tensors is empty
         """
         from hub.integrations import dataset_to_pytorch as to_pytorch
 
