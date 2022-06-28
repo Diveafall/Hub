@@ -327,6 +327,9 @@ class dataset:
         Raises:
             DatasetHandlerError: If a Dataset does not exist at the given path.
             AgreementError: When agreement is rejected
+            UserNotLoggedInException: When user is not logged in
+            InvalidTokenException: If the specified toke is invalid
+            TokenError: when there are permission or other errors related to token
         """
         access_method, num_workers, scheduler = parse_access_method(access_method)
         check_access_method(access_method, overwrite=False)

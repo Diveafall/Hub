@@ -193,6 +193,11 @@ class HubBackendClient:
 
         Returns:
             tuple: containing full url to dataset, credentials, mode and expiration time respectively.
+
+        Raises:
+            UserNotLoggedInException: When user is not logged in
+            InvalidTokenException: If the specified toke is invalid
+            TokenError: when there are permission or other errors related to token
         """
         relative_url = GET_DATASET_CREDENTIALS_SUFFIX.format(org_id, ds_name)
         try:
