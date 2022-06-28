@@ -28,11 +28,15 @@ from hub.util.exceptions import (
     BadRequestException,
     ReadOnlyModeError,
     EmptyTensorInTheDatasetError,
+    InvalidTokenException,
+    TokenError,
+    UserNotLoggedInException,
 )
 from hub.util.pretty_print import summary_tensor, summary_dataset
-from hub.constants import MB
+from hub.constants import MB, ENV_HUB_DEV_USERNAME, ENV_HUB_DEV_PASSWORD
 
 from click.testing import CliRunner
+from hub.cli.auth import login, logout
 
 
 # need this for 32-bit and 64-bit systems to have correct tests
@@ -1842,3 +1846,65 @@ def test_uneven_view(memory_ds):
         np.testing.assert_equal(np.arange(0, 10, 2), view.x.numpy().squeeze())
         with pytest.raises(IndexError):
             np.testing.assert_equal(np.arange(0, 10, 2), view.y.numpy().squeeze())
+
+
+@pytest.mark.parametrize(
+    ("ds_generator", "path", "hub_token"),
+    [
+        (
+            "hub_cloud_ds_generator",
+            "hub_cloud_path_without_permission",
+            "hub_cloud_dev_token",
+        ),
+        ("hub_cloud_ds_generator", "hub_cloud_path", "hub_cloud_dev_invalid_token"),
+    ],
+    indirect=True,
+)
+def test_hub_empty_exceptions(ds_generator, path, hub_token):
+    dest_path = "_".join((path, "dest"))
+
+    if hub_token == "invalid token":
+        with pytest.raises(InvalidTokenException):
+            ds = hub.empty(dest_path, token=hub_token)
+    else:
+        runner = CliRunner()
+        username = os.getenv(ENV_HUB_DEV_USERNAME)
+        password = os.getenv(ENV_HUB_DEV_PASSWORD)
+        result = runner.invoke(login, f"-u {username} -p {password}")
+        with pytest.raises(TokenError):
+            ds = hub.empty(path)
+
+        result = runner.invoke(logout)
+        with pytest.raises(UserNotLoggedInException):
+            ds = hub.empty(dest_path)
+
+
+@pytest.mark.parametrize(
+    ("ds_generator", "path", "hub_token"),
+    [
+        (
+            "hub_cloud_ds_generator",
+            "hub_cloud_path_without_permission",
+            "hub_cloud_dev_token",
+        ),
+        ("hub_cloud_ds_generator", "hub_cloud_path", "hub_cloud_dev_invalid_token"),
+    ],
+    indirect=True,
+)
+def test_hub_load_exceptions(ds_generator, path, hub_token):
+    dest_path = "_".join((path, "dest"))
+
+    if hub_token == "invalid token":
+        with pytest.raises(InvalidTokenException):
+            ds = hub.load(dest_path, token=hub_token)
+    else:
+        runner = CliRunner()
+        username = os.getenv(ENV_HUB_DEV_USERNAME)
+        password = os.getenv(ENV_HUB_DEV_PASSWORD)
+        result = runner.invoke(login, f"-u {username} -p {password}")
+        with pytest.raises(TokenError):
+            ds = hub.load(path)
+
+        result = runner.invoke(logout)
+        with pytest.raises(UserNotLoggedInException):
+            ds = hub.load(dest_path)

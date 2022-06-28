@@ -133,10 +133,12 @@ class dataset:
             )
         except Exception as e:
             if isinstance(e, UserNotLoggedInException):
-                message = f"Please log in through the CLI in order to create this dataset, " \
-                           "or create an API token in the UI and pass it to this method using " \
-                           "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and " \
-                           "‘activeloop register."
+                message = (
+                    f"Please log in through the CLI in order to create this dataset, "
+                    "or create an API token in the UI and pass it to this method using "
+                    "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and "
+                    "‘activeloop register."
+                )
                 raise UserNotLoggedInException(message)
             raise
         ds_exists = dataset_exists(cache_chain)
@@ -258,10 +260,12 @@ class dataset:
             )
         except Exception as e:
             if isinstance(e, UserNotLoggedInException):
-                message = f"Please log in through the CLI in order to create this dataset, " \
-                          "or create an API token in the UI and pass it to this method using " \
-                          "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and " \
-                          "‘activeloop register."
+                message = (
+                    f"Please log in through the CLI in order to create this dataset, "
+                    "or create an API token in the UI and pass it to this method using "
+                    "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and "
+                    "‘activeloop register."
+                )
                 raise UserNotLoggedInException(message)
             raise
 
@@ -344,10 +348,12 @@ class dataset:
             )
         except Exception as e:
             if isinstance(e, UserNotLoggedInException):
-                message = f"Please log in through the CLI in order to load this dataset, " \
-                          "or create an API token in the UI and pass it to this method using " \
-                          "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and " \
-                          "‘activeloop register."
+                message = (
+                    f"Please log in through the CLI in order to load this dataset, "
+                    "or create an API token in the UI and pass it to this method using "
+                    "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and "
+                    "‘activeloop register."
+                )
                 raise UserNotLoggedInException(message)
             raise
         if not dataset_exists(cache_chain):

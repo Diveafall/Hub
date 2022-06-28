@@ -759,5 +759,7 @@ class InvalidTokenException(Exception):
 
 class TokenError(Exception):
     def __init__(self):
-        message = "Token does not have sufficient permissions or some other problems with token"
+        message = (
+            "You do not have sufficient permissions or some other problems with token"
+        )
         super().__init__(message)

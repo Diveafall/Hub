@@ -27,7 +27,7 @@ from hub.client.config import (
     GET_PRESIGNED_URL_SUFFIX,
 )
 from hub.client.log import logger
-import jwt # should add it to requirements.txt
+import jwt  # should add it to requirements.txt
 
 # for these codes, we will retry requests upto 3 times
 retry_status_codes = {502}
@@ -204,7 +204,9 @@ class HubBackendClient:
             ).json()
         except Exception:
             try:
-                decoded_token = jwt.decode(self.token, options={"verify_signature": False})
+                decoded_token = jwt.decode(
+                    self.token, options={"verify_signature": False}
+                )
             except Exception:
                 raise InvalidTokenException
             if decoded_token["id"] == "public":
