@@ -754,7 +754,7 @@ class HubEmptyInvalidPermissionError(Exception):
 
 class InvalidTokenException(Exception):
     def __init__(self):
-        super().__init__("Invalid token")
+        super().__init__("Token is invalid. Please make sure the token exists and is not expired.")
 
 
 class TokenError(Exception):
