@@ -35,11 +35,8 @@ from hub.util.exceptions import (
     PathNotEmptyException,
     SamePathException,
     AuthorizationException,
-    HubLoadInvalidPermissionError,
-    HubEmptyInvalidPermissionError,
-    InvalidTokenException,
     UserNotLoggedInException,
-    TokenError,
+    TokenPermissionError,
 )
 from hub.util.storage import get_storage_and_cache_chain, storage_provider_from_path
 from hub.util.compute import get_compute_provider
@@ -140,6 +137,13 @@ class dataset:
                     "‘activeloop register."
                 )
                 raise UserNotLoggedInException(message)
+            elif isinstance(e, TokenPermissionError):
+                message = (
+                    f"You can not load this dataset. You do not have sufficient "
+                    f"permissions. Please make sure that provided path is accessible "
+                    f"in write mode for your account or provided token."
+                )
+                raise TokenPermissionError(message)
             raise
         ds_exists = dataset_exists(cache_chain)
         if overwrite and ds_exists:
@@ -267,13 +271,22 @@ class dataset:
                     "‘activeloop register."
                 )
                 raise UserNotLoggedInException(message)
+            elif isinstance(e, TokenPermissionError):
+                message = (
+                    f"You can not load this dataset. You do not have sufficient "
+                    f"permissions. Please make sure that provided path is accessible "
+                    f"in write mode for your account or provided token."
+                )
+                raise TokenPermissionError(message)
             raise
 
         if overwrite and dataset_exists(cache_chain):
             cache_chain.clear()
         elif dataset_exists(cache_chain):
             raise DatasetHandlerError(
-                f"A dataset already exists at the given path ({path}). If you want to create a new empty dataset, either specify another path or use overwrite=True. If you want to load the dataset that exists at this path, use hub.load() instead."
+                f"A dataset already exists at the given path ({path}). If you want to create"
+                f" a new empty dataset, either specify another path or use overwrite=True. "
+                f"If you want to load the dataset that exists at this path, use hub.load() instead."
             )
 
         read_only = storage.read_only
@@ -329,7 +342,7 @@ class dataset:
             AgreementError: When agreement is rejected
             UserNotLoggedInException: When user is not logged in
             InvalidTokenException: If the specified toke is invalid
-            TokenError: when there are permission or other errors related to token
+            TokenPermissionError: when there are permission or other errors related to token
         """
         access_method, num_workers, scheduler = parse_access_method(access_method)
         check_access_method(access_method, overwrite=False)
@@ -358,6 +371,13 @@ class dataset:
                     "‘activeloop register."
                 )
                 raise UserNotLoggedInException(message)
+            elif isinstance(e, TokenPermissionError):
+                message = (
+                    f"You can not load this dataset. You do not have sufficient "
+                    f"permissions. Please make sure that provided path is accessible "
+                    f"in read mode for your account or provided token."
+                )
+                raise TokenPermissionError(message)
             raise
         if not dataset_exists(cache_chain):
             raise DatasetHandlerError(

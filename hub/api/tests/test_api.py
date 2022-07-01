@@ -29,7 +29,7 @@ from hub.util.exceptions import (
     ReadOnlyModeError,
     EmptyTensorInTheDatasetError,
     InvalidTokenException,
-    TokenError,
+    TokenPermissionError,
     UserNotLoggedInException,
 )
 from hub.util.pretty_print import summary_tensor, summary_dataset
@@ -1871,7 +1871,7 @@ def test_hub_empty_exceptions(ds_generator, path, hub_token):
         username = os.getenv(ENV_HUB_DEV_USERNAME)
         password = os.getenv(ENV_HUB_DEV_PASSWORD)
         result = runner.invoke(login, f"-u {username} -p {password}")
-        with pytest.raises(TokenError):
+        with pytest.raises(TokenPermissionError):
             ds = hub.empty(path)
 
         result = runner.invoke(logout)
@@ -1902,7 +1902,7 @@ def test_hub_load_exceptions(ds_generator, path, hub_token):
         username = os.getenv(ENV_HUB_DEV_USERNAME)
         password = os.getenv(ENV_HUB_DEV_PASSWORD)
         result = runner.invoke(login, f"-u {username} -p {password}")
-        with pytest.raises(TokenError):
+        with pytest.raises(TokenPermissionError):
             ds = hub.load(path)
 
         result = runner.invoke(logout)

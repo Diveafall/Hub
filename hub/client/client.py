@@ -6,7 +6,7 @@ from hub.util.exceptions import (
     InvalidPasswordException,
     InvalidTokenException,
     UserNotLoggedInException,
-    TokenError,
+    TokenPermissionError,
 )
 from hub.client.utils import check_response_status, write_token, read_token
 from hub.client.config import (
@@ -197,7 +197,7 @@ class HubBackendClient:
         Raises:
             UserNotLoggedInException: When user is not logged in
             InvalidTokenException: If the specified toke is invalid
-            TokenError: when there are permission or other errors related to token
+            TokenPermissionError: when there are permission or other errors related to token
         """
         relative_url = GET_DATASET_CREDENTIALS_SUFFIX.format(org_id, ds_name)
         try:
@@ -216,7 +216,7 @@ class HubBackendClient:
                 raise InvalidTokenException
             if decoded_token["id"] == "public":
                 raise UserNotLoggedInException()
-            raise TokenError
+            raise TokenPermissionError()
         full_url = response.get("path")
         creds = response["creds"]
         mode = response["mode"]

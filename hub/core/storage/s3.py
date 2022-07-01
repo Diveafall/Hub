@@ -472,10 +472,7 @@ class S3Provider(StorageProvider):
         This would only happen for datasets stored on Hub storage for which temporary 12 hour credentials are generated.
         """
         if self.expiration and (force or float(self.expiration) < time.time()):
-            try:
-                client = HubBackendClient(self.token)
-            except Exception:
-                raise IvalidTokenError
+            client = HubBackendClient(self.token)
             org_id, ds_name = self.tag.split("/")
 
             mode = "r" if self.read_only else "a"
@@ -559,10 +556,7 @@ class S3Provider(StorageProvider):
 
         if url is None:
             if self._is_hub_path:
-                try:
-                    client = HubBackendClient(self.token)
-                except Exception:
-                    raise IvalidTokenError
+                client = HubBackendClient(self.token)
                 org_id, ds_name = self.tag.split("/")  # type: ignore
                 url = client.get_presigned_url(org_id, ds_name, key)
             else:
