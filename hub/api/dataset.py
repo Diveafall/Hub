@@ -139,7 +139,7 @@ class dataset:
                 raise UserNotLoggedInException(message)
             elif isinstance(e, TokenPermissionError):
                 message = (
-                    f"You can not load this dataset. You do not have sufficient "
+                    f"You can not create this dataset. You do not have sufficient "
                     f"permissions. Please make sure that provided path is accessible "
                     f"in write mode for your account or provided token."
                 )
@@ -266,16 +266,14 @@ class dataset:
             if isinstance(e, UserNotLoggedInException):
                 message = (
                     f"Please log in through the CLI in order to create this dataset, "
-                    "or create an API token in the UI and pass it to this method using "
-                    "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and "
-                    "‘activeloop register."
+                    f"or create an API token in the UI and pass it to this method using the "
+                    f"‘token’ parameter. The CLI commands are ‘activeloop login’ and ‘activeloop register’."
                 )
                 raise UserNotLoggedInException(message)
             elif isinstance(e, TokenPermissionError):
                 message = (
-                    f"You can not load this dataset. You do not have sufficient "
-                    f"permissions. Please make sure that provided path is accessible "
-                    f"in write mode for your account or provided token."
+                    "You do not have sufficient permissions to create a dataset at the specified path. "
+                    "Please make sure that you have write access to the path provided."
                 )
                 raise TokenPermissionError(message)
             raise
@@ -365,17 +363,16 @@ class dataset:
         except Exception as e:
             if isinstance(e, UserNotLoggedInException):
                 message = (
-                    f"Please log in through the CLI in order to load this dataset, "
+                    "Please log in through the CLI in order to load this dataset, "
                     "or create an API token in the UI and pass it to this method using "
                     "the ‘token’ parameter. The CLI commands are ‘activeloop login’ and "
-                    "‘activeloop register."
+                    "‘activeloop register’."
                 )
                 raise UserNotLoggedInException(message)
             elif isinstance(e, TokenPermissionError):
                 message = (
-                    f"You can not load this dataset. You do not have sufficient "
-                    f"permissions. Please make sure that provided path is accessible "
-                    f"in read mode for your account or provided token."
+                    "You do not have sufficient permissions to load a dataset from the specified path. "
+                    "Please make sure that you have read access to the path provided."
                 )
                 raise TokenPermissionError(message)
             raise

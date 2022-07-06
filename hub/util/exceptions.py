@@ -754,7 +754,7 @@ class HubEmptyInvalidPermissionError(Exception):
 
 class InvalidTokenException(Exception):
     def __init__(self):
-        super().__init__("Token is incorrect. Please check carefully spelling of the token")
+        super().__init__("Token is invalid. Please check its spelling and try again.")
 
 
 class TokenPermissionError(Exception):
