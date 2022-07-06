@@ -23,14 +23,6 @@ def test_point_cloud(local_ds, point_cloud_paths):
             assert tensor.shape == (3, 20153)
 
             shape_tester(local_ds, path, sample, tensor, feature_size=18)
-        elif compression == "bin":
-            tensor = local_ds.create_tensor(
-                f"point_cloud_{i}", htype="point_cloud", sample_compression=compression
-            )
-            sample = hub.read(path)
-            if "dummy_data" in path:  # check shape only for internal test point_clouds
-                assert sample.shape == (120268, 4)
-            shape_tester(local_ds, path, sample, tensor, feature_size=4)
 
 
 def shape_tester(local_ds, path, sample, tensor, feature_size):
@@ -48,8 +40,6 @@ def test_point_cloud_slicing(local_ds: Dataset, point_cloud_paths):
     for compression, path in point_cloud_paths.items():
         if compression == "las":
             dummy = np.zeros((20153, 3))
-        elif compression == "bin":
-            dummy = np.zeros((120268, 3))
         local_ds.create_tensor(
             "point_cloud", htype="point_cloud", sample_compression=compression
         )

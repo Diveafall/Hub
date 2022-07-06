@@ -446,7 +446,6 @@ def video_paths():
 def point_cloud_paths():
     paths = {
         "las": "point_cloud.las",
-        "bin": "point_cloud.bin",
     }
 
     parent = get_dummy_data_path("point_cloud")

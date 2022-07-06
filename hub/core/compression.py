@@ -444,7 +444,7 @@ def verify_compressed_file(
                 return _read_video_shape(file), "|u1"  # type: ignore
         elif compression == "dcm":
             return _read_dicom_shape_and_dtype(file)
-        elif compression in ("las", "bin`"):
+        elif compression == "las":
             return _read_point_cloud_shape_and_dtype(file)
         else:
             return _fast_decompress(file)
@@ -469,7 +469,6 @@ def get_compression(header=None, path=None):
             ".avi",
             ".dcm",
             ".las",
-            ".bin",
         ]
         path = str(path).lower()
         for fmt in file_formats:
@@ -655,7 +654,7 @@ def read_meta_from_compressed_file(
                 shape, typestr = _read_video_shape(file), "|u1"  # type: ignore
             except Exception as e:
                 raise CorruptedSampleError(compression)
-        elif compression in ("las", "bin"):
+        elif compression == "las":
             try:
                 shape, typestr = _read_point_cloud_shape_and_dtype(file)
             except Exception as e:
@@ -1035,14 +1034,6 @@ def _decompress_audio(
     return audio
 
 
-def _open_kitti_bin_file(file):
-    file_buffer = file
-    if type(file) is str:
-        with open(file, "rb") as f:
-            file_buffer = f.read()
-    return np.frombuffer(file_buffer, dtype=np.float32).reshape(-1, 4)
-
-
 def _open_lidar_file(file):
     try:
         import laspy as lp  # type: ignore
@@ -1057,27 +1048,13 @@ def _load_lidar_point_cloud_data(file):
     return point_cloud, dimension_names
 
 
-def _load_kitti_point_cloud_data(file):
-    point_cloud = _open_kitti_bin_file(file)
-    dimension_names = ["X", "Y", "Z", "intensity"]
-    return point_cloud, dimension_names
-
-
 def _open_point_cloud_data(file: Union[bytes, memoryview, str]):
     if isinstance(file, str):
-        extension = os.path.splitext(file)[1]
-        if extension in _LIDAR_COMPRESSIONS:
-            point_cloud, dimension_names = _load_lidar_point_cloud_data(file)
-            return point_cloud, dimension_names
-        return _load_kitti_point_cloud_data(file)
-
-    file_bytes = file
-    if isinstance(file, memoryview):
-        file_bytes = file.obj
-    if _LIDAR_SIGNATURE in file_bytes:
-        point_cloud, dimension_names = _load_lidar_point_cloud_data(BytesIO(file))
+        point_cloud, dimension_names = _load_lidar_point_cloud_data(file)
         return point_cloud, dimension_names
-    return _load_kitti_point_cloud_data(file)
+
+    point_cloud, dimension_names = _load_lidar_point_cloud_data(BytesIO(file))
+    return point_cloud, dimension_names
 
 
 def _read_point_cloud_meta(file):

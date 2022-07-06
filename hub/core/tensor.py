@@ -797,6 +797,9 @@ class Tensor:
                 return list(map(list, self.numpy(aslist=True)))
         elif htype == "point_cloud":
             full_arr = self.get_full_point_cloud_numpy(aslist=aslist)
+
+            if self.meta.sample_compression == None:
+                return full_arr
             # we support two extensions, for las the numpy array contains different dtypes
             # while numpy array of bin is np.float32. Also for bin we have to check whether we are working
             # with one sample or several samples

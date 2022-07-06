@@ -953,7 +953,6 @@ def test_compressions_list():
     assert hub.compressions == [
         "apng",
         "avi",
-        "bin",
         "bmp",
         "dcm",
         "dib",

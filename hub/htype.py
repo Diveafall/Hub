@@ -70,13 +70,14 @@ HTYPE_CONFIGURATIONS: Dict[str, Dict] = {
         "_info": ["class_names"],  # class_names should be stored in info, not meta
     },
     "bbox": {"dtype": "float32", "coords": {}, "_info": ["coords"]},
-    "bbox_3d": {"dtype": "float32", "coords": {}, "_info": ["coords"]},
+    "bbox.3d": {"dtype": "float32", "coords": {}, "_info": ["coords"]},
     "audio": {"dtype": "float64"},
     "video": {"dtype": "uint8"},
     "binary_mask": {
         "dtype": "bool"
     },  # TODO: pack numpy arrays to store bools as 1 bit instead of 1 byte
     "segment_mask": {"dtype": "uint32", "class_names": [], "_info": ["class_names"]},
+    "segment_mask.3d": {"dtype": "uint32", "class_names": [], "_info": ["class_names"]},
     "keypoints_coco": {"dtype": "int32"},
     "point": {"dtype": "int32"},
     "json": {
@@ -109,7 +110,6 @@ HTYPE_SUPPORTED_COMPRESSIONS = {
     "json": BYTE_COMPRESSIONS[:],
     "point_cloud": POINT_CLOUD_COMPRESSIONS[:],
     "dicom": ["dcm"],
-    "point_cloud_calibration_matrix": BYTE_COMPRESSIONS[:],
 }
 
 
