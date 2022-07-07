@@ -139,9 +139,9 @@ class dataset:
                 raise UserNotLoggedInException(message)
             elif isinstance(e, TokenPermissionError):
                 message = (
-                    f"You can not create this dataset. You do not have sufficient "
-                    f"permissions. Please make sure that provided path is accessible "
-                    f"in write mode for your account or provided token."
+                    f"You can not load or create this dataset. You do not have sufficient "
+                    f"permissions. Please make sure that you have read or write access "
+                    f"to the path provided."
                 )
                 raise TokenPermissionError(message)
             raise
