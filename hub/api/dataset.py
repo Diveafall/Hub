@@ -140,7 +140,7 @@ class dataset:
             elif isinstance(e, TokenPermissionError):
                 message = (
                     f"You can not load or create this dataset. You do not have sufficient "
-                    f"permissions. Please make sure that you have read or write access "
+                    f"permissions. Please make sure that you have sufficient permissions "
                     f"to the path provided."
                 )
                 raise TokenPermissionError(message)
