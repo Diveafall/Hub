@@ -2174,9 +2174,9 @@ class Dataset:
             )  # create if doesn't exist
         except PathNotEmptyException:
             hub.delete(path, force=True)
-            queries_ds = hub.empty(path, verbose=False, creds=creds)
+            queries_ds = hub.empty(path, creds=creds)
         except DatasetHandlerError:
-            queries_ds = hub.empty(path, verbose=False, creds=creds)
+            queries_ds = hub.empty(path, creds=creds)
         return queries_ds
 
 
