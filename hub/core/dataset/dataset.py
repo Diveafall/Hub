@@ -2167,6 +2167,19 @@ class Dataset:
         self._append_to_queries_json(info)
         return vds
 
+    def __create_queries_dataset(self, path: str, creds: Optional[dict] = None):
+        try:
+            queries_ds = hub.load(
+                path, verbose=False, creds=creds
+            )  # create if doesn't exist
+        except PathNotEmptyException:
+            hub.delete(path, force=True)
+            queries_ds = hub.empty(path, verbose=False, creds=creds)
+        except DatasetHandlerError:
+            queries_ds = hub.empty(path, verbose=False, creds=creds)
+        return queries_ds
+
+
     def _save_view_in_user_queries_dataset(
         self,
         id: Optional[str],
@@ -2174,6 +2187,7 @@ class Dataset:
         copy: bool,
         num_workers: int,
         username: Optional[str] = None,
+        creds: Optional[dict] = None,
     ):
         """Saves this view under hub://username/queries
         Only applicable for views of hub datasets.
@@ -2183,31 +2197,22 @@ class Dataset:
 
         if not username:
             username = get_user_name()
-            if username == "public":
-                raise NotLoggedInError("Unable to save query result. Not logged in.")
+        if username == "public":
+            raise NotLoggedInError("Unable to save query result. Not logged in.")
 
         info = self._get_view_info(id, message, copy)
         base = self._view_base or self
         org_id, ds_name = base.org_id, base.ds_name
         hash = f"[{org_id}][{ds_name}]{info['id']}"
         info["id"] = hash
-        queries_ds_path = f"hub://{username}/queries"
 
-        try:
-            queries_ds = hub.load(
-                queries_ds_path, verbose=False
-            )  # create if doesn't exist
-        except PathNotEmptyException:
-            hub.delete(queries_ds_path, force=True)
-            queries_ds = hub.empty(queries_ds_path, verbose=False)
-        except DatasetHandlerError:
-            queries_ds = hub.empty(queries_ds_path, verbose=False)
-
+        queries_ds_path = f"s3://snark-hub/protected/{username}/queries"
+        queries_ds = self.__create_queries_dataset(queries_ds_path, creds=creds)
         queries_ds._unlock()  # we don't need locking as no data will be added to this ds.
 
-        path = f"hub://{username}/queries/{hash}"
+        path = f"s3://snark-hub/protected/{username}/queries/{hash}"
 
-        vds = hub.empty(path, overwrite=True)
+        vds = hub.empty(path, overwrite=True, creds=creds)
 
         self._write_vds(vds, info, copy, num_workers)
         queries_ds._append_to_queries_json(info)
