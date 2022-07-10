@@ -2201,10 +2201,6 @@ class Dataset:
             raise NotLoggedInError("Unable to save query result. Not logged in.")
 
         info = self._get_view_info(id, message, copy)
-        base = self._view_base or self
-        org_id, ds_name = base.org_id, base.ds_name
-        hash = f"[{org_id}][{ds_name}]{info['id']}"
-        info["id"] = hash
 
         queries_ds_path = f"s3://snark-hub/protected/{username}/queries"
         queries_ds = self.__create_queries_dataset(queries_ds_path, creds=creds)
@@ -2515,7 +2511,7 @@ class Dataset:
         if self.path.startswith("hub://"):
             queries, qds = self._read_queries_json_from_user_account()
             for q in queries:
-                if q["id"] == f"[{self.org_id}][{self.ds_name}]{id}":
+                if q["id"] == id:
                     return ViewEntry(q, qds, True)
         raise KeyError(f"No view with id {id} found in the dataset.")
 
@@ -2566,7 +2562,7 @@ class Dataset:
                     for i, q in enumerate(qjson):
                         if (
                             q["source-dataset"] == self.path
-                            and q["id"] == f"[{self.org_id}][{self.ds_name}]{id}"
+                            and q["id"] == id
                         ):
                             qjson.pop(i)
                             qds.base_storage.subdir(
