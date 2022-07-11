@@ -2169,13 +2169,16 @@ class Dataset:
 
     def __create_queries_dataset(self, path: str, creds: Optional[dict] = None):
         try:
+            print("loading...")
             queries_ds = hub.load(
                 path, verbose=False, creds=creds
             )  # create if doesn't exist
         except PathNotEmptyException:
+            print("deleting then create")
             hub.delete(path, force=True)
             queries_ds = hub.empty(path, creds=creds)
         except DatasetHandlerError:
+            print("using empty to create")
             queries_ds = hub.empty(path, creds=creds)
         return queries_ds
 
@@ -2189,6 +2192,7 @@ class Dataset:
         username: Optional[str] = None,
         creds: Optional[dict] = None,
     ):
+        print("saving personal view", id, username, creds)
         """Saves this view under hub://username/queries
         Only applicable for views of hub datasets.
         """
@@ -2201,13 +2205,13 @@ class Dataset:
             raise NotLoggedInError("Unable to save query result. Not logged in.")
 
         info = self._get_view_info(id, message, copy)
-        hash = info.get("id")
 
         queries_ds_path = f"s3://snark-hub/protected/{username}/queries"
         queries_ds = self.__create_queries_dataset(queries_ds_path, creds=creds)
         queries_ds._unlock()  # we don't need locking as no data will be added to this ds.
 
-        path = f"s3://snark-hub/protected/{username}/queries/{hash}"
+        path = f"s3://snark-hub/protected/{username}/queries/{id}"
+        print("creating view inside: ", path, creds)
 
         vds = hub.empty(path, overwrite=True, creds=creds)
 
