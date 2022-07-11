@@ -2201,6 +2201,7 @@ class Dataset:
             raise NotLoggedInError("Unable to save query result. Not logged in.")
 
         info = self._get_view_info(id, message, copy)
+        hash = info.get("id")
 
         queries_ds_path = f"s3://snark-hub/protected/{username}/queries"
         queries_ds = self.__create_queries_dataset(queries_ds_path, creds=creds)

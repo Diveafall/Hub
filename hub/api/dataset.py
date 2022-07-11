@@ -241,7 +241,8 @@ class dataset:
         )
 
         if overwrite and dataset_exists(cache_chain):
-            cache_chain.clear()
+            # cache_chain.clear()
+            pass
         elif dataset_exists(cache_chain):
             raise DatasetHandlerError(
                 f"A dataset already exists at the given path ({path}). If you want to create a new empty dataset, either specify another path or use overwrite=True. If you want to load the dataset that exists at this path, use hub.load() instead."
