@@ -2206,11 +2206,11 @@ class Dataset:
 
         info = self._get_view_info(id, message, copy)
 
-        queries_ds_path = f"s3://snark-hub/protected/{username}/queries"
+        queries_ds_path = f"s3://snark-hub-dev/protected/{username}/queries"
         queries_ds = self.__create_queries_dataset(queries_ds_path, creds=creds)
         queries_ds._unlock()  # we don't need locking as no data will be added to this ds.
 
-        path = f"s3://snark-hub/protected/{username}/queries/{id}"
+        path = f"s3://snark-hub-dev/protected/{username}/queries/{id}"
         print("creating view inside: ", path, creds)
 
         vds = hub.empty(path, overwrite=True, creds=creds)
